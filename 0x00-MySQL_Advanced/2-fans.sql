@@ -3,7 +3,7 @@
 -- The results should include the columns `origin` and `nb_fans`
 -- The script should be executable on any database
 
-SELECT origin, SUM(nb_fans) AS nb_fans
+SELECT origin, SUM(fans) AS nb_fans
 FROM metal_bands
 GROUP BY origin
 ORDER BY nb_fans DESC;
