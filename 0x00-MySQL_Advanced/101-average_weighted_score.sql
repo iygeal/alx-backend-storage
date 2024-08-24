@@ -5,34 +5,21 @@ DELIMITER //
 
 CREATE PROCEDURE ComputeAverageWeightedScoreForUsers()
 BEGIN
-    -- Declare variables
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE uid INT;
+    -- Set average_score to 0 for all users initially
+    UPDATE users SET average_score = 0;
 
-    -- Declare a cursor to iterate over each user
-    DECLARE cur CURSOR FOR SELECT id FROM users;
-
-    -- Declare a NOT FOUND handler for the cursor
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
-
-    -- Open the cursor
-    OPEN cur;
-
-    -- Start loop
-    user_loop: LOOP
-        FETCH cur INTO uid;
-
-        -- Exit loop if no more rows
-        IF done THEN
-            LEAVE user_loop;
-        END IF;
-
-        -- Compute the average weighted score for the current user
-        CALL ComputeAverageWeightedScoreForUser(uid);
-    END LOOP;
-
-    -- Close the cursor
-    CLOSE cur;
+    -- Compute and update the average weighted score for all users
+    UPDATE users u
+    JOIN (
+        SELECT c.user_id,
+               SUM(c.score * p.weight) / SUM(p.weight) AS weighted_average
+        FROM corrections c
+        JOIN projects p ON c.project_id = p.id
+        GROUP BY c.user_id
+    ) AS avg_scores
+    ON u.id = avg_scores.user_id
+    SET u.average_score = avg_scores.weighted_average;
 END //
 
 DELIMITER ;
+
