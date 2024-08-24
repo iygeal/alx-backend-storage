@@ -1,5 +1,5 @@
---- Creates a stored procedure ComputeAverageScoreForUser
---- that computes and store the average score for a student
+-- Creates a stored procedure ComputeAverageScoreForUser
+-- that computes and store the average score for a student.
 
 DELIMITER //
 
