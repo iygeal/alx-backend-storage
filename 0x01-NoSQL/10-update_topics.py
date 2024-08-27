@@ -3,8 +3,6 @@
 document based on its name attribute
 """
 
-from pymongo import MongoClient
-
 
 def update_topics(mongo_collection, name, topics):
     """Updates the topics of a 'school' document based on its name attribute
@@ -13,4 +11,3 @@ def update_topics(mongo_collection, name, topics):
         {"name": name},
         {"$set": {"topics": topics}}
     )
-    
