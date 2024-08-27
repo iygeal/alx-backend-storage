@@ -1,0 +1,2 @@
+// This script inserts a single document inside a 'school' collection
+db.school.insertOne({ name: 'Holberton school' });
