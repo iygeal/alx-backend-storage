@@ -69,6 +69,6 @@ class Cache:
             return None
         try:
             return int(value)
-        except ValueError:
+        except Exception:
             value = 0
         return value
