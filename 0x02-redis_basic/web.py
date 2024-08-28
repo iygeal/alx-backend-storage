@@ -4,7 +4,7 @@ from functools import wraps
 from typing import Union
 
 # Redis connection (modify host and port if necessary)
-redis_client = Redis(host="localhost", port=6379)
+redis_client = Redis()
 
 # Cache expiration time in seconds
 cache_expiration = 10
