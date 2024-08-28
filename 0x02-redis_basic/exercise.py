@@ -53,7 +53,7 @@ class Cache:
         Returns:
             Optional[str]: Retrieved data as a string or None
         """
-        return self.get(key, fn=lambda d: d.decode('utf-8'))
+        return self._redis.get(key, fn=lambda d: d.decode('utf-8'))
 
     def get_int(self, key: str) -> Optional[int]:
         """Retrieves data from Redis and converts it to an integer
@@ -64,4 +64,4 @@ class Cache:
         Returns:
             Optional[int]: The retrieved data as an integer or None
         """
-        return self.get(key, fn=int)
+        return self._redis.get(key, fn=int)
