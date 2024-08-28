@@ -1,59 +1,56 @@
-#!/usr/bin/env python3
-"""This module contains a function to get HTML content of a URL
-with caching and access tracking.
-"""
-
-import redis
 import requests
-from typing import Callable
+from redis import Redis
 from functools import wraps
+from typing import Union
 
-# Initialize Redis client
-redis_client = redis.Redis()
+# Redis connection (modify host and port if necessary)
+redis_client = Redis(host="localhost", port=6379)
+
+# Cache expiration time in seconds
+cache_expiration = 10
 
 
-def cache_page(method: Callable) -> Callable:
-    """Decorator to cache the result of a function call."""
+def cache_with_expiration(func):
+    """Decorator to cache function results with expiration time in Redis.
 
-    @wraps(method)
-    def wrapper(url: str, *args, **kwargs) -> str:
-        """
-        Wrapper function that checks if the response is in the cache,
-        if so return it, otherwise call the actual function to fetch the data,
-        cache the response with an expiration time of 10 seconds and
-        increment the count for the URL access.
+    Args:
+        func: The function to be decorated.
 
-        Args:
-            url (str): The URL to fetch data from
+    Returns:
+        A wrapper function that caches the result of the decorated function.
+    """
 
-        Returns:
-            str: The HTML content of the URL
-        """
-        cache_key = f"cache:{url}"
-        count_key = f"count:{url}"
+    @wraps(func)
+    def wrapper(url: str) -> Union[str, None]:
+        cache_key = f"count:{url}"
+        cached_content = redis_client.get(cache_key)
 
-        # Check if the response is in the cache
-        cached_response = redis_client.get(cache_key)
-        if cached_response:
-            redis_client.incr(count_key)
-            return cached_response.decode('utf-8')
+        if cached_content:
+            # Increment counter and return cached content
+            redis_client.incr(cache_key)
+            return cached_content.decode("utf-8")
 
-        # Call the actual function to fetch the data
-        response = method(url, *args, **kwargs)
-
-        # Cache the response with an expiration time of 10 seconds
-        redis_client.setex(cache_key, 10, response)
-
-        # Increment the count for the URL access
-        redis_client.incr(count_key)
-
-        return response
+        # Fetch content if not cached, update cache, and return
+        content = func(url)
+        redis_client.set(cache_key, content, ex=cache_expiration)
+        redis_client.incr(cache_key)
+        return content
 
     return wrapper
 
 
-@cache_page
+@cache_with_expiration
 def get_page(url: str) -> str:
-    """Fetch the HTML content of a URL."""
+    """Fetches the HTML content of a URL using requests
+    and tracks access count in Redis.
+
+    Args:
+        url: The URL to fetch content from.
+
+    Returns:
+        The HTML content of the URL as a string.
+    """
+
     response = requests.get(url)
-    return response.text
+    response.raise_for_status()  # Raise exception for non-2xx status codes
+    return response.content
