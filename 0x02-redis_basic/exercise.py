@@ -70,4 +70,5 @@ class Cache:
         try:
             return int(value)
         except ValueError:
-            return None
+            value = 0
+        return value
