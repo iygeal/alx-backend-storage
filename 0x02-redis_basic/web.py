@@ -14,20 +14,7 @@ def count_url_access(method):
     a URL is accessed """
     @wraps(method)
     def wrapper(url):
-        """
-        Wrapper function that checks if a cached version of the page
-        exists in Redis, and if so, returns it. Otherwise, it calls the
-        wrapped method, stores the result in Redis and returns it.
 
-        Also, it increments the count of times the page has been accessed
-        in Redis.
-
-        Args:
-            url (str): The URL of the page to retrieve
-
-        Returns:
-            str: The HTML content of the page
-        """
         cached_key = "cached:" + url
         cached_data = store.get(cached_key)
         if cached_data:
