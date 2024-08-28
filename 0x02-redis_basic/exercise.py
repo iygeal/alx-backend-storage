@@ -6,7 +6,7 @@ used to interact with a Redis database
 import redis
 import uuid
 from typing import Union, Callable, Optional
-import functools
+from functools import wraps
 
 
 def count_calls(method: Callable) -> Callable:
@@ -16,7 +16,7 @@ def count_calls(method: Callable) -> Callable:
     # Get the method's qualified name as the key
     key = method.__qualname__
 
-    @functools.wraps(method)
+    @wraps(method)
     def wrapper(self, *args, **kwargs):
         """Wrapper function that increments the call count in Redis"""
         # Increment the count in Redis
