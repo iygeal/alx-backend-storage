@@ -44,24 +44,24 @@ class Cache:
         if fn:
             return fn(data)
 
-        def get_str(self, key: str) -> Optional[str]:
-            """Retrieve data from Redis and convert it to a UTF-8 string
+    def get_str(self, key: str) -> Optional[str]:
+        """Retrieve data from Redis and convert it to a UTF-8 string
 
-            Args:
-                key (str): The key to retrieve the data for
+        Args:
+            key (str): The key to retrieve the data for
 
-            Returns:
-                Optional[str]: Retrieved data as a string or None
-            """
-            return self.get(key, fn=lambda d: d.decode('utf-8'))
+        Returns:
+            Optional[str]: Retrieved data as a string or None
+        """
+        return self.get(key, fn=lambda d: d.decode('utf-8'))
 
-        def get_int(self, key: str) -> Optional[int]:
-            """Retrieves data from Redis and converts it to an integer
+    def get_int(self, key: str) -> Optional[int]:
+        """Retrieves data from Redis and converts it to an integer
 
-            Args:
-                key (str): The key to retrieve the data for
+        Args:
+            key (str): The key to retrieve the data for
 
-            Returns:
-                Optional[int]: The retrieved data as an integer or None
-            """
-            return self.get(key, fn=int)
+        Returns:
+            Optional[int]: The retrieved data as an integer or None
+        """
+        return self.get(key, fn=int)
