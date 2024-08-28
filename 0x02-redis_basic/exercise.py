@@ -32,7 +32,7 @@ class Cache:
 
         Args:
             key (str): The key to retrieve the data for
-            fn (Optional[ Callable], optional): Function to convert the data.
+            fn (Optional[Callable], optional): Function to convert the data.
             Defaults to None.
 
         Returns:
@@ -43,6 +43,7 @@ class Cache:
             return None
         if fn:
             return fn(data)
+        return data
 
     def get_str(self, key: str) -> Optional[str]:
         """Retrieve data from Redis and convert it to a UTF-8 string
