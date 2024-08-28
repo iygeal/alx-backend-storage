@@ -68,7 +68,7 @@ class Cache:
         if value is None:
             return None
         try:
-            return int(value)
+            value = int(value)
         except Exception:
             value = 0
         return value
