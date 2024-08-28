@@ -1,59 +1,50 @@
 #!/usr/bin/env python3
-"""This module contains a function to get HTML content of a URL
-with caching and access tracking.
+"""
+web cache and tracker
 """
 import requests
 import redis
 from functools import wraps
 
-# Initialize Redis client
-store = redis.Redis(host='localhost', port=6379, db=0)
+store = redis.Redis()
 
 
 def count_url_access(method):
-    """Decorator counting how many times a URL is accessed
-    and caching the result.
-    """
-
+    """ Decorator counting how many times
+    a URL is accessed """
     @wraps(method)
-    def wrapper(url: str):
+    def wrapper(url):
         """
-        Wrapper function that checks if the response is in the cache,
-        if so return it, otherwise call the actual function to fetch the data,
-        cache the response with an expiration time of 10 seconds, and
-        increment the count for the URL access.
+        Wrapper function that checks if a cached version of the page
+        exists in Redis, and if so, returns it. Otherwise, it calls the
+        wrapped method, stores the result in Redis and returns it.
+
+        Also, it increments the count of times the page has been accessed
+        in Redis.
 
         Args:
-            url (str): The URL to fetch data from
+            url (str): The URL of the page to retrieve
 
         Returns:
-            str: The HTML content of the URL
+            str: The HTML content of the page
         """
-        # Create cache and count keys for Redis
         cached_key = "cached:" + url
-        count_key = "count:" + url
-
-        # Check if the response is in the cache
         cached_data = store.get(cached_key)
         if cached_data:
             return cached_data.decode("utf-8")
 
-        # If not cached, fetch the page content
+        count_key = "count:" + url
         html = method(url)
 
-        # Increment the access count and cache the response
-        # with an expiration time of 10 seconds
         store.incr(count_key)
-        store.setex(cached_key, 10, html)
-
+        store.set(cached_key, html)
+        store.expire(cached_key, 10)
         return html
-
     return wrapper
 
 
 @count_url_access
 def get_page(url: str) -> str:
-    """Fetch the HTML content of a URL."""
+    """ Returns HTML content of a url """
     res = requests.get(url)
-    res.raise_for_status()  # Raise an exception for HTTP errors
     return res.text
