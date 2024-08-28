@@ -13,12 +13,12 @@ def count_calls(method: Callable) -> Callable:
     """Decorator that counts the number of times
     a method is called
     """
+    # Get the method's qualified name as the key
+    key = method.__qualname__
 
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
         """Wrapper function that increments the call count in Redis"""
-        # Get the method's qualified name as the key
-        key = method.__qualname__
         # Increment the count in Redis
         self._redis.incr(key)
         # Call the original method and return its result
