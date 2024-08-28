@@ -68,7 +68,7 @@ class Cache:
         if value is None:
             return None
         try:
-            value = int(value)
+            value = int(value.decode('utf-8'))
         except Exception:
             value = 0
         return value
