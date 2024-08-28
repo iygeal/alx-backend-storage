@@ -2,26 +2,25 @@
 """This module contains a function to get HTML content of a URL
 with caching and access tracking.
 """
-
-import redis
 import requests
-from typing import Callable
+import redis
 from functools import wraps
 
-# Initialize Redis client with default settings
-redis_client = redis.Redis(host='localhost', port=6379, db=0)
+# Initialize Redis client
+store = redis.Redis(host='localhost', port=6379, db=0)
 
 
-def cache_page(method: Callable[[str], str]) -> Callable[[str], str]:
-    """Decorator to cache the result of a function call
-    with an expiration time of 10 seconds."""
+def count_url_access(method):
+    """Decorator counting how many times a URL is accessed
+    and caching the result.
+    """
 
     @wraps(method)
-    def wrapper(url: str, *args, **kwargs) -> str:
+    def wrapper(url: str):
         """
         Wrapper function that checks if the response is in the cache,
         if so return it, otherwise call the actual function to fetch the data,
-        cache the response with an expiration time of 10 seconds and
+        cache the response with an expiration time of 10 seconds, and
         increment the count for the URL access.
 
         Args:
@@ -30,46 +29,31 @@ def cache_page(method: Callable[[str], str]) -> Callable[[str], str]:
         Returns:
             str: The HTML content of the URL
         """
-        cache_key = f"cache:{url}"
-        count_key = f"count:{url}"
+        # Create cache and count keys for Redis
+        cached_key = "cached:" + url
+        count_key = "count:" + url
 
-        try:
-            # Check if the response is in the cache
-            cached_response = redis_client.get(cache_key)
-            if cached_response:
-                redis_client.incr(count_key)
-                return cached_response.decode('utf-8')
+        # Check if the response is in the cache
+        cached_data = store.get(cached_key)
+        if cached_data:
+            return cached_data.decode("utf-8")
 
-            # Call the actual function to fetch the data
-            response = method(url, *args, **kwargs)
+        # If not cached, fetch the page content
+        html = method(url)
 
-            # Cache the response with an expiration time of 10 seconds
-            redis_client.setex(cache_key, 10, response)
+        # Increment the access count and cache the response
+        # with an expiration time of 10 seconds
+        store.incr(count_key)
+        store.setex(cached_key, 10, html)
 
-            # Increment the count for the URL access
-            redis_client.incr(count_key)
-
-            return response
-        except redis.RedisError as e:
-            # Handle Redis exceptions
-            print(f"Redis error: {e}")
-            return ""
-        except requests.RequestException as e:
-            # Handle HTTP request exceptions
-            print(f"Request error: {e}")
-            return ""
+        return html
 
     return wrapper
 
 
-@cache_page
+@count_url_access
 def get_page(url: str) -> str:
     """Fetch the HTML content of a URL."""
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        return response.text
-    except requests.RequestException as e:
-        # Handle HTTP request exceptions
-        print(f"Request error: {e}")
-        return ""
+    res = requests.get(url)
+    res.raise_for_status()  # Raise an exception for HTTP errors
+    return res.text
