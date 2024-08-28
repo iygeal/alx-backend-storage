@@ -44,31 +44,16 @@ class Cache:
         if fn:
             return fn(data)
 
-    def get_str(self, key: str) -> Optional[str]:
-        """Retrieve data from Redis and convert it to a UTF-8 string
+    def get_str(self, key: str) -> str:
+        '''parametrize Cache.get with correct conversion function'''
+        value = self._redis.get(key)
+        return value.decode("utf-8")
 
-        Args:
-            key (str): The key to retrieve the data for
-
-        Returns:
-            Optional[str]: Retrieved data as a string or None
-        """
-        return self.get(key, fn=lambda d: d.decode('utf-8'))
-
-    def get_int(self, key: str) -> Optional[int]:
-        """Retrieves data from Redis and converts it to an integer
-
-        Args:
-            key (str): The key to retrieve the data for
-
-        Returns:
-            Optional[int]: The retrieved data as an integer or None
-        """
-        value = self.get(key)
-        if value is None:
-            return None
+    def get_int(self, key: str) -> int:
+        '''parametrize Cache.get with correct conversion function'''
+        value = self._redis.get(key)
         try:
-            value = int(value.decode('utf-8'))
+            value = int(value.decode("utf-8"))
         except Exception:
             value = 0
         return value
