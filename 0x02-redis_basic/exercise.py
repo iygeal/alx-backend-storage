@@ -6,6 +6,25 @@ used to interact with a Redis database
 import redis
 import uuid
 from typing import Union, Callable, Optional
+import functools
+
+
+def count_calls(method: Callable) -> Callable:
+    """Decorator that counts the number of times
+    a method is called
+    """
+
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        """Wrapper function that increments the call count in Redis"""
+        # Get the method's qualified name as the key
+        key = method.__qualname__
+        # Increment the count in Redis
+        self._redis.incr(key)
+        # Call the original method and return its result
+        return method(self, *args, **kwargs)
+
+    return wrapper
 
 
 class Cache:
@@ -19,6 +38,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """Store data in Redis and return a unique key
         """
